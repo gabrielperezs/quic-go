@@ -70,6 +70,8 @@ var _ = Describe("Config", func() {
 				f.Set(reflect.ValueOf([]byte{1, 2, 3, 4}))
 			case "KeepAlive":
 				f.Set(reflect.ValueOf(true))
+			case "EnableDatagrams":
+				f.Set(reflect.ValueOf(true))
 			case "QuicTracer":
 				f.Set(reflect.ValueOf(quictrace.NewTracer()))
 			case "Tracer":

@@ -260,6 +260,9 @@ type Config struct {
 	StatelessResetKey []byte
 	// KeepAlive defines whether this peer will periodically send a packet to keep the connection alive.
 	KeepAlive bool
+	// See https://datatracker.ietf.org/doc/draft-ietf-quic-datagram.
+	// Datagrams will only be available when both peers enable datagram support.
+	EnableDatagrams bool
 	// QUIC Event Tracer (see https://github.com/google/quic-trace).
 	// Warning: Support for quic-trace will soon be dropped in favor of qlog.
 	// It is disabled by default. Use the "quictrace" build tag to enable (e.g. go build -tags quictrace).
