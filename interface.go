@@ -142,8 +142,6 @@ type StreamError interface {
 	ErrorCode() ErrorCode
 }
 
-type ConnectionState = handshake.ConnectionState
-
 // A Session is a QUIC connection between two peers.
 type Session interface {
 	// AcceptStream returns the next stream opened by the peer, blocking until one is available.
@@ -266,7 +264,14 @@ type Config struct {
 	// Warning: Support for quic-trace will soon be dropped in favor of qlog.
 	// It is disabled by default. Use the "quictrace" build tag to enable (e.g. go build -tags quictrace).
 	QuicTracer quictrace.Tracer
-	Tracer     logging.Tracer
+	// QUIC Event Tracer.
+	// Warning: Experimental. This API should not be considered stable and will change soon.
+	Tracer logging.Tracer
+}
+
+// ConnectionState records basic details about a QUIC connection
+type ConnectionState struct {
+	TLS handshake.ConnectionState
 }
 
 // A Listener for incoming QUIC connections
