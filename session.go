@@ -521,7 +521,7 @@ func (s *session) preSetup() {
 
 	s.windowUpdateQueue = newWindowUpdateQueue(s.streamsMap, s.connFlowController, s.framer.QueueControlFrame)
 	if s.config.EnableDatagrams {
-		s.datagramQueue = newDatagramQueue(s.scheduleSending)
+		s.datagramQueue = newDatagramQueue(s.scheduleSending, s.logger)
 	}
 
 	if s.config.QuicTracer != nil {
@@ -1148,7 +1148,7 @@ func (s *session) handleFrame(f wire.Frame, encLevel protocol.EncryptionLevel, d
 	case *wire.HandshakeDoneFrame:
 		err = s.handleHandshakeDoneFrame()
 	case *wire.DatagramFrame:
-		// TODO: handle DATRAGRAM frames
+		err = s.handleDatagramFrame(frame)
 	default:
 		err = fmt.Errorf("unexpected frame type: %s", reflect.ValueOf(&frame).Elem().Type().Name())
 	}
@@ -1285,6 +1285,14 @@ func (s *session) handleAckFrame(frame *wire.AckFrame, encLevel protocol.Encrypt
 		return nil
 	}
 	return s.cryptoStreamHandler.SetLargest1RTTAcked(frame.LargestAcked())
+}
+
+func (s *session) handleDatagramFrame(f *wire.DatagramFrame) error {
+	if f.Length(s.version) > protocol.MaxDatagramFrameSize {
+		return qerr.NewError(qerr.ProtocolViolation, "DATAGRAM frame too large")
+	}
+	s.datagramQueue.HandleDatagramFrame(f)
+	return nil
 }
 
 // closeLocal closes the session and send a CONNECTION_CLOSE containing the error
@@ -1799,6 +1807,10 @@ func (s *session) SendMessage(p []byte) error {
 	copy(f.Data, p)
 	s.datagramQueue.AddAndWait(f)
 	return nil
+}
+
+func (s *session) ReceiveMessage() ([]byte, error) {
+	return s.datagramQueue.Receive()
 }
 
 func (s *session) LocalAddr() net.Addr {
