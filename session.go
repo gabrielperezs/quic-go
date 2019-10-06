@@ -206,6 +206,8 @@ type session struct {
 	keepAlivePingSent bool
 	keepAliveInterval time.Duration
 
+	datagramQueue *datagramQueue
+
 	traceCallback func(quictrace.Event)
 
 	logID  string
@@ -340,6 +342,7 @@ var newSession = func(
 		cs,
 		s.framer,
 		s.receivedPacketHandler,
+		s.datagramQueue,
 		s.perspective,
 		s.version,
 	)
@@ -462,6 +465,7 @@ var newClientSession = func(
 		cs,
 		s.framer,
 		s.receivedPacketHandler,
+		s.datagramQueue,
 		s.perspective,
 		s.version,
 	)
@@ -1336,6 +1340,9 @@ func (s *session) handleCloseError(closeErr closeError) {
 
 	s.streamsMap.CloseWithError(quicErr)
 	s.connIDManager.Close()
+	if s.datagramQueue != nil {
+		s.datagramQueue.CloseWithError(quicErr)
+	}
 
 	if s.tracer != nil {
 		// timeout errors are logged as soon as they occur (to distinguish between handshake and idle timeouts)
