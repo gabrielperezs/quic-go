@@ -1077,7 +1077,11 @@ func (s *session) handleUnpackedPacket(
 		for i, frame := range frames {
 			fs[i] = logutils.ConvertFrame(frame)
 		}
-		s.tracer.ReceivedPacket(packet.hdr, packetSize, fs)
+		if packet.hdr.IsLongHeader {
+			s.tracer.ReceivedLongHeaderPacket(packet.hdr, packetSize, fs)
+		} else {
+			s.tracer.ReceivedShortHeaderPacket(packet.hdr.DestConnectionID, packet.hdr.PacketNumber, packet.hdr.KeyPhase, packetSize, fs)
+		}
 		for _, frame := range frames {
 			if err := s.handleFrame(frame, packet.encryptionLevel, packet.hdr.DestConnectionID); err != nil {
 				return err
