@@ -126,9 +126,16 @@ func (r *RoundTripper) getClient(hostname string, onlyCached bool) (http.RoundTr
 	}
 
 	c, ok := r.clients[hostname]
-	// Don't use the client if the underline session context have some error
-	if ok && c.(*client).SessionContext().Err() != nil {
-		ok = false
+	if ok {
+		// Check if the client is usable or force to create a new one
+		if _client, valid := c.(*client); valid {
+			ctx := _client.SessionContext()
+			if ctx == nil || ctx.Err() != nil {
+				ok = false
+			}
+		} else {
+			ok = false
+		}
 	}
 	if !ok {
 		if onlyCached {

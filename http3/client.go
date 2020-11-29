@@ -154,6 +154,9 @@ func (c *client) maxHeaderBytes() uint64 {
 }
 
 func (c *client) SessionContext() context.Context {
+	if c.session == nil {
+		return nil
+	}
 	return c.session.Context()
 }
 
