@@ -2,6 +2,7 @@ package http3
 
 import (
 	"bytes"
+	"context"
 	"crypto/tls"
 	"errors"
 	"fmt"
@@ -150,6 +151,13 @@ func (c *client) maxHeaderBytes() uint64 {
 		return defaultMaxResponseHeaderBytes
 	}
 	return uint64(c.opts.MaxHeaderBytes)
+}
+
+func (c *client) SessionContext() context.Context {
+	if c.session == nil {
+		return nil
+	}
+	return c.session.Context()
 }
 
 // RoundTrip executes a request and returns a response
