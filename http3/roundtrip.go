@@ -125,13 +125,17 @@ func (r *RoundTripper) getClient(hostname string, onlyCached bool) (http.RoundTr
 		r.clients = make(map[string]roundTripCloser)
 	}
 
-	client, ok := r.clients[hostname]
+	c, ok := r.clients[hostname]
+	// Don't use the client if the underline session context have some error
+	if ok && c.(*client).SessionContext().Err() != nil {
+		ok = false
+	}
 	if !ok {
 		if onlyCached {
 			return nil, ErrNoCachedConn
 		}
 		var err error
-		client, err = newClient(
+		c, err = newClient(
 			hostname,
 			r.TLSClientConfig,
 			&roundTripperOpts{
@@ -144,9 +148,9 @@ func (r *RoundTripper) getClient(hostname string, onlyCached bool) (http.RoundTr
 		if err != nil {
 			return nil, err
 		}
-		r.clients[hostname] = client
+		r.clients[hostname] = c
 	}
-	return client, nil
+	return c, nil
 }
 
 // Close closes the QUIC connections that this RoundTripper has used
